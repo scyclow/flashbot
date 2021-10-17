@@ -7,7 +7,7 @@
     "start": "ts-node src/index.ts"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@flashbots/ethers-provider-bundle": "^0.4.2",
     "ethers": "^5.4.7"
