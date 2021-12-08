@@ -31,3 +31,18 @@
 
 # Edit for our purpose
 Edited script is saved in src/index2.ts
+
+# Opened questions
+1. How to find out priority fee and base fee params (https://github.com/scyclow/flashbot/blob/555e55b6023ecd27a76ff6ea894f4a5e2cb133ea/src/index.ts#L10)
+Resolution?: Using GasTracker to get current values https://etherscan.io/gastracker
+
+2. How to determine the number of transactions in one bundle?
+https://github.com/scyclow/flashbot/blob/555e55b6023ecd27a76ff6ea894f4a5e2cb133ea/src/index.ts#L68
+
+3. How to get miner address for miner bribe and how to estimate amount of bribe 
+https://github.com/scyclow/flashbot/blob/555e55b6023ecd27a76ff6ea894f4a5e2cb133ea/src/index.ts#L96
+
+4. How to estimate gas transaction and get transaction data - i have been using etherscan.io and MetaMask but fee is insanely high
+
+
+
