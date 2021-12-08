@@ -18,3 +18,15 @@
 - If you absolutely must put your keys in a file, then name the file `secrets.json`, which is included in this repo's .gitignore
 - Pass everything in as environment variables, like so:
 - `INFURA_KEY=<...> FUNDING_WALLET_PRIVATE_KEY=<...> COMPROMISED_WALLET_PRIVATE_KEY=<...> npm run start`
+
+# Sources
+- Blogpost from SteveP - Compromised - https://steviep.xyz/txt/compromised
+- Repo from SteveP (this repo is fork) - https://github.com/scyclow/flashbot
+
+- Frontrunning a scammer from whitehat perspective - https://amanusk.medium.com/frontrunning-a-scammer-95f34dd33cf8
+- Frontrunning a scammer from victims perspective - https://www.reddit.com/r/CryptoCurrency/comments/om7ecc/frontrunning_a_scammer_pov_from_the_whitehat/
+
+- Flashbots docs https://docs.flashbots.net/
+
+# Edit
+Edited script is saved in src/index2.ts
