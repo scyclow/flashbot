@@ -43,6 +43,8 @@ https://github.com/scyclow/flashbot/blob/555e55b6023ecd27a76ff6ea894f4a5e2cb133e
 https://github.com/scyclow/flashbot/blob/555e55b6023ecd27a76ff6ea894f4a5e2cb133ea/src/index.ts#L96
 
 4. How to estimate gas transaction and get transaction data - i have been using etherscan.io and MetaMask but fee is insanely high
+<img width="1422" alt="Screen Shot 2021-12-07 at 13 51 44" src="https://user-images.githubusercontent.com/8282513/145187810-c870942a-f379-4b3b-b13d-8431d99431cc.png">
+
 
 
 
