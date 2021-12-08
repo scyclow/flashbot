@@ -27,6 +27,7 @@
 - Frontrunning a scammer from victims perspective - https://www.reddit.com/r/CryptoCurrency/comments/om7ecc/frontrunning_a_scammer_pov_from_the_whitehat/
 
 - Flashbots docs https://docs.flashbots.net/
+- Flashbots repo - ive used bits of code from this repo https://github.com/flashbots/searcher-sponsored-tx
 
-# Edit
+# Edit for our purpose
 Edited script is saved in src/index2.ts
