@@ -45,6 +45,10 @@ https://github.com/scyclow/flashbot/blob/555e55b6023ecd27a76ff6ea894f4a5e2cb133e
 4. How to estimate gas transaction and get transaction data - i have been using etherscan.io and MetaMask but fee is insanely high
 <img width="1422" alt="Screen Shot 2021-12-07 at 13 51 44" src="https://user-images.githubusercontent.com/8282513/145187810-c870942a-f379-4b3b-b13d-8431d99431cc.png">
 
-
-
+# Plan
+1. Create Infura project and retrieve API key - DONE
+2. Estimate gas prices
+3. Create transaction data using Etherscan.io and Metamask
+4. Test on goerli
+5. Run it
 
