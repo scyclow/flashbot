@@ -81,14 +81,14 @@ const testBundle = [
     As the youtube video mentions, you can get the gasLimit and data from
     building the transaction in etherscan and viewing it in metamask.
   */
-  // {
-  //   transaction: tx({
-  //     to: '0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85',
-  //     gasLimit: 73294,
-  //     data: '0x42842e0e0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a4b68d710504723bfc9350a3650da27bfbaa2988bc845afcc43f7f1ebc6e3d42f2'
-  //   }),
-  //   signer: compromisedWallet
-  // },
+  {
+    transaction: tx({
+      to: '0x8CEc4E83E0382Cc99021B4f51a097d2dBAf705b5',
+      gasLimit: 73294,
+      data: '0x42842e0e0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a4b68d710504723bfc9350a3650da27bfbaa2988bc845afcc43f7f1ebc6e3d42f2'
+    }),
+    signer: compromisedWallet
+  },
 
   // Bribe Miner -- my understanding is that you just need to put something here, but it's no longer important
   {
@@ -320,10 +320,10 @@ async function main() {
   try {
     console.log('Retreiving Flashbots Provider...')
     flashbotsProvider = await FlashbotsBundleProvider.create(provider, Wallet.createRandom(), FLASHBOTS_ENDPOINT)
+    console.log('Provider obtained');
   } catch (err) {
     console.error(err)
   }
-
 
   // Every time a new block has been detected, attempt to relay the bundle to miners for the next block
   // Since these transactions aren't in the mempool you need to submit this for every block until it
@@ -340,7 +340,7 @@ async function main() {
       if ('error' in bundleResponse) {
         throw new Error(bundleResponse.error.message)
       }
-      const bundleResolution = await bundleResponse.wait()
+      /* const bundleResolution = await bundleResponse.wait()
       if (bundleResolution === FlashbotsBundleResolution.BundleIncluded) {
         console.log(`Congrats, included in ${blockNumber}`)
         process.exit(0)
@@ -349,17 +349,17 @@ async function main() {
       } else if (bundleResolution === FlashbotsBundleResolution.AccountNonceTooHigh) {
         console.log("Nonce too high, bailing")
         process.exit(1)
-      }
+      }*/
 
-      /* console.log('Submitting bundle')
+      // test
+      console.log('Submitting bundle')
       const response = await bundleResponse.simulate()
       if ('error' in response) {
         console.log('Simulate error')
         console.error(response.error)
         process.exit(1)
       }
-
-      console.log('response:', response) */
+      console.log('response:', response);
 
       console.log(`Try: ${i} -- block: ${nextBlock}`)
       i++
