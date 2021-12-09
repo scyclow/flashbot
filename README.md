@@ -1,4 +1,6 @@
 # 1st Goerli test
+We have send 2 NFTs from Compromised walled to Safe wallet using 3rd wallet - funging wallet. All transactions are submitted in the same block.
+
 ## Before test
 Compromised wallet - please note balance is 0 before test
 <img width="1435" alt="Screen Shot 2021-12-09 at 12 49 35" src="https://user-images.githubusercontent.com/8282513/145393815-d73b6f47-27e9-4101-8795-c96bfe83abe6.png">
