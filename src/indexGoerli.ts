@@ -32,7 +32,7 @@ const FUNDING_WALLET_PRIVATE_KEY = process.env.FUNDING_WALLET_PRIVATE_KEY
 // This wallet is already fucked.
 const COMPROMISED_WALLET_PRIVATE_KEY = process.env.COMPROMISED_WALLET_PRIVATE_KEY
 
-// Public key of safe wallet - you want to send your NFTs to this one
+// Public key of safe wallet - you want to send your NFTs to this one - this will be needed as toAddr parameter when creating transactionData on etherscan
 const SAFE_WALLET_PUBLIC_KEY = '0x2fd995f584BEb83787Db3f8dae2Bf0f0dcB34f5d';
 
 if (!(INFURA_KEY || FUNDING_WALLET_PRIVATE_KEY || COMPROMISED_WALLET_PRIVATE_KEY)) {
