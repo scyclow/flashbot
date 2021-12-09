@@ -87,6 +87,12 @@ const testBundle = [
     As the youtube video mentions, you can get the gasLimit and data from
     building the transaction in etherscan and viewing it in metamask.
     Transfer 2 NFTs in bundle
+    Data property - you have to find out on etherscan.io
+     - go to NFTs contract page on etherscan.io
+     - choose write contract and connect MetaMask wallet
+     - select safeTransferFrom method and insert parameters toAddr, fromAddr, tokenId
+     - Press Write
+     - in Metamask transaction data pane we should be able find transaction data in hex
   */
   {
     transaction: tx({
