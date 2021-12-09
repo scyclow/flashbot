@@ -1,3 +1,19 @@
+# 1st Goerli test
+## Before test
+Compromised wallet - please note balance is 0 before test
+<img width="1435" alt="Screen Shot 2021-12-09 at 12 49 35" src="https://user-images.githubusercontent.com/8282513/145393815-d73b6f47-27e9-4101-8795-c96bfe83abe6.png">
+
+Safe wallet
+<img width="1417" alt="Screen Shot 2021-12-09 at 12 49 43" src="https://user-images.githubusercontent.com/8282513/145393826-9d53acb0-97da-4d05-9fc1-015075b1525a.png">
+
+## After test
+Compromised wallet - 2 outgoing transactions to MultiFaucet NFT contract
+<img width="1417" alt="Screen Shot 2021-12-09 at 12 54 23" src="https://user-images.githubusercontent.com/8282513/145393763-a85a48e6-5796-4650-afbb-08dceb2345a8.png">
+
+Safe wallet - incoming 2 NEW NFT tokens
+<img width="1417" alt="Screen Shot 2021-12-09 at 12 55 40" src="https://user-images.githubusercontent.com/8282513/145393779-74f73d67-238a-4f31-b6da-def60ba467eb.png">
+
+
 # Flashbot recovery example
 - The problem: One of your wallets has been compromised, and any ETH you put on ther is siphoned off immediately. You would like to retrieve some assets or transfer contract ownership, but that all costs gas and your gas tank is stuck on empty.
 - The solution: Flashbots!
