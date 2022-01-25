@@ -27,10 +27,8 @@
 # Sources
 - Blogpost from SteveP - Compromised - https://steviep.xyz/txt/compromised
 - Repo from SteveP - https://github.com/scyclow/flashbot
-
 - Frontrunning a scammer from whitehat perspective - https://amanusk.medium.com/frontrunning-a-scammer-95f34dd33cf8
 - Frontrunning a scammer from victims perspective - https://www.reddit.com/r/CryptoCurrency/comments/om7ecc/frontrunning_a_scammer_pov_from_the_whitehat/
-
 - StackExchange Q - https://ethereum.stackexchange.com/questions/112097/how-to-tranfer-remaining-nfts-and-or-tokens-out-of-a-hacked-ethereum-wallet
 - Medium blog - https://medium.com/coinmonks/rescuing-an-nft-fd0acccfa25a
 - Code - https://github.com/microbecode/flashbot
