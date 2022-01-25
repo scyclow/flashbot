@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/indexGoerli.ts"
+    "start": "ts-node src/index.ts"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "@flashbots/ethers-provider-bundle": "^0.4.2",
-    "ethers": "^5.4.7"
+    "ethers": "^5.4.7",
+    "web3-utils": "^1.7.0"
   },
   "devDependencies": {
     "@types/node": "^16.11.0",

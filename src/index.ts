@@ -1,372 +1,196 @@
 // For everything you need to know about this file, see https://www.youtube.com/watch?v=1ve1YIpDs_I
 
-
-import { providers, Wallet } from "ethers"
-import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle"
+import { providers, Wallet, BigNumber } from 'ethers';
+import { FlashbotsBundleProvider, FlashbotsBundleResolution } from '@flashbots/ethers-provider-bundle';
+import { fromWei } from 'web3-utils';
 
 // constants
-const GWEI = 10n ** 9n
-const ETHER = 10n ** 18n
-const PRIORITY_FEE = 5
-const BASE_FEE = 100
+const GWEI = BigNumber.from(10).pow(9);
+const PRIORITY_FEE = GWEI.mul(3); // priority fee is 3 GWEI you can find current values of priority fee and base fee at https://etherscan.io/gastracker
+const BLOCKS_IN_THE_FUTURE = 1;
 
 // goerli
-const FLASHBOTS_ENDPOINT = 'https://relay-goerli.flashbots.net'
-const CHAIN_ID = 5
+const FLASHBOTS_ENDPOINT = 'https://relay-goerli.flashbots.net';
+const CHAIN_ID = 5;
 
-// mainnet
-// const FLASHBOTS_ENDPOINT = 'https://relay.flashbots.net'
-// const CHAIN_ID = 1
+// mainnet -  uncomment to run on ETH  mainnet
+//const FLASHBOTS_ENDPOINT = 'https://relay.flashbots.net';
+//const CHAIN_ID = 1;
 
+// utils
+const convertWeiToEth = (wei: BigNumber): string => {
+  return fromWei(wei.toString(), 'ether');
+};
+
+const convertWeiToGwei = (wei: BigNumber): string => {
+  return fromWei(wei.toString(), 'gwei');
+};
 
 // Include these as env variables
-// DON'T EVEN FUCKING THINK ABOUT PUTTING THESE IN A FILE
-
 // https://infura.io <- check out their free tier, create a project, and use the project id
-const INFURA_KEY = process.env.INFURA_KEY
+const INFURA_KEY = process.env.INFURA_KEY;
 
 // Don't put much more than you need in this wallet
-const FUNDING_WALLET_PRIVATE_KEY = process.env.FUNDING_WALLET_PRIVATE_KEY
+const FUNDING_WALLET_PRIVATE_KEY = process.env.FUNDING_WALLET_PRIVATE_KEY;
 
-// This wallet is already fucked.
-const COMPROMISED_WALLET_PRIVATE_KEY = process.env.COMPROMISED_WALLET_PRIVATE_KEY
+// This wallet is compromised
+const COMPROMISED_WALLET_PRIVATE_KEY = process.env.COMPROMISED_WALLET_PRIVATE_KEY;
 
 if (!(INFURA_KEY || FUNDING_WALLET_PRIVATE_KEY || COMPROMISED_WALLET_PRIVATE_KEY)) {
-  console.log('Please include INFURA_KEY, FUNDING_WALLET_PRIVATE_KEY, and COMPROMISED_WALLET_PRIVATE_KEY as env variables.')
-  process.exit(1)
+  console.log('Please include INFURA_KEY, FUNDING_WALLET_PRIVATE_KEY, and COMPROMISED_WALLET_PRIVATE_KEY as env variables.');
+  process.exit(1);
+}
+
+// In default setting run only simulation - set SEND_BUNDLE=true to send bundle
+const SEND_BUNDLE: string = process.env.SEND_BUNDLE;
+if (SEND_BUNDLE === 'true') {
+  console.log('Sending bundle');
+} else {
+  console.log('Running only simulation, please set SEND_BUNDLE=true to send bundle');
 }
 
 // Create clients to interact with infura and your wallets
-const provider = new providers.InfuraProvider(CHAIN_ID, INFURA_KEY)
-const fundingWallet = new Wallet(FUNDING_WALLET_PRIVATE_KEY, provider)
-const compromisedWallet = new Wallet(COMPROMISED_WALLET_PRIVATE_KEY, provider)
+const provider = new providers.InfuraProvider(CHAIN_ID, INFURA_KEY);
+const fundingWallet = new Wallet(FUNDING_WALLET_PRIVATE_KEY, provider);
+const compromisedWallet = new Wallet(COMPROMISED_WALLET_PRIVATE_KEY, provider);
 
 // Cut down on some boilerplate
 const tx = (args) => ({
   chainId: CHAIN_ID,
   type: 2, // EIP 1559
-  maxFeePerGas: GWEI * BigInt(BASE_FEE),
-  maxPriorityFeePerGas: GWEI * BigInt(PRIORITY_FEE),
+  maxPriorityFeePerGas: PRIORITY_FEE,
   data: '0x',
   value: 0n,
-  ...args
-})
-
+  ...args,
+});
 
 /*
   The basic idea here is that you want to you group together the
   following transactions such that no one can get in the middle of
   things and siphon off the ETH:
     1. Fund the compromised wallet
-    2. Perform all the actions you need on that wallet
-    3. Bribe the miner
+    2. Perform all the actions you need on that wallet (e.g. transfer nfts to safe account, or claim and transfer your SOS tokens, or unstake and transfer some staked tokens)
 
   This means that you will be executing transactions signed by at least two different wallets,
   and will likely be transfering assets to a third wallet.
-
 */
-const testBundle = [
-  // Send the compromised wallet 0.05 ETH
-  {
-    transaction: tx({
-      to: compromisedWallet.address,
-      // There will probably be some ETH left over from this, which will be cleaned out immediately
-      value: GWEI * BigInt(73294) * BigInt(BASE_FEE),
-    }),
-    signer: fundingWallet
-  },
 
-  /*
-    Example of transfering an ENS entry to the destination wallet
-    As the youtube video mentions, you can get the gasLimit and data from
-    building the transaction in etherscan and viewing it in metamask.
-  */
-  // {
-  //   transaction: tx({
-  //     to: '0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85',
-  //     gasLimit: 73294,
-  //     data: '0x42842e0e0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a4b68d710504723bfc9350a3650da27bfbaa2988bc845afcc43f7f1ebc6e3d42f2'
-  //   }),
-  //   signer: compromisedWallet
-  // },
+const getBundle = (maxBaseFeeInNextBlock: BigNumber) => {
+  // Max fee in WEI that you want to pay for 1 unit of gas
+  const maxFeePerGas: BigNumber = PRIORITY_FEE.add(maxBaseFeeInNextBlock);
 
-  // Bribe Miner -- my understanding is that you just need to put something here, but it's no longer important
-  {
-    transaction: tx({
-      to: '0x8512a66D249E3B51000b772047C8545Ad010f27c',
-      value: ETHER / 10000n,
-    }),
-    signer: fundingWallet
-  },
-]
+  // You have to adjust total gas needed for all transactions from compromised wallet
+  const totalGasNeeded: BigNumber = BigNumber.from(65036);
+  const fundAmount: BigNumber = maxFeePerGas.mul(totalGasNeeded);
+  // fundAmount = fundAmount.sub(GWEI.mul(896478)); - if u have some leftovers in compromised wallet you can adjust funding amount by substracting leftover
+  console.log(`Priority fee:\t\t${PRIORITY_FEE} WEI, ${convertWeiToGwei(PRIORITY_FEE)} GWEI
+Base fee:\t\t${maxBaseFeeInNextBlock} WEI, ${convertWeiToGwei(maxBaseFeeInNextBlock)} GWEI
+Max fee per gas:\t${maxFeePerGas} WEI, ${convertWeiToGwei(maxFeePerGas)} GWEI
+Fund amount:\t\t${fundAmount} WEI, ${convertWeiToGwei(fundAmount)} GWEI, ${convertWeiToEth(fundAmount)} ETH`);
 
+  const bundle = [
+    // Send funds for gas to compromised wallet from funding wallet
+    // Take care when computing how much to send - eth scavenger will eat any leftovers
+    {
+      transaction: tx({
+        to: compromisedWallet.address,
+        maxFeePerGas,
+        gasLimit: 21000,
+        value: fundAmount,
+      }),
+      signer: fundingWallet,
+    },
+    // Transfer NFT
+    // You have to make transaction to NFT contract address in order to transfer it
+    // You can find out gas limit by simulating transaction and gas limit should be in simulate response
+    // You will get transaction data from etherscan -
+    //   1. Find NFT contract on etherscan
+    //   2. Go to Write contract tab
+    //   3. Connect metamask wallet
+    //   4. Fill data for transferFrom method
+    //   5. Copy hex transacton data from Metamask into data field below
+    {
+      transaction: tx({
+        to: '0xf5de760f2e916647fd766b4ad9e85ff943ce3a2b',
+        maxFeePerGas,
+        gasLimit: 65036,
+        data: '0x42842e0e000000000000000000000000beeadaeb8466b66cd1772747b695014f6540e2610000000000000000000000008cec4e83e0382cc99021b4f51a097d2dbaf705b50000000000000000000000000000000000000000000000000000000000035d65',
+      }),
+      signer: compromisedWallet,
+    }
+  ];
+  return bundle;
+};
 
-//// Here are three bundles of actual transactions I ran
-
-// const bundle1 = [
-//   // send the compromised wallet some eth
-//   {
-//     transaction: tx({
-//       to: compromisedWallet.address,
-//       value: 20n * ETHER / 1000n,
-//     }),
-//     signer: fundingWallet
-//   },
-
-//   // transfer steviep.eth
-//   {
-//     transaction: tx({
-//       to: '0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85',
-//       gasLimit: 74294,
-//       data: '0x42842e0e0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a4b68d710504723bfc9350a3650da27bfbaa2988bc845afcc43f7f1ebc6e3d42f2'
-//     }),
-//     signer: compromisedWallet
-//   },
-
-//   // transfer fakeinternetmoney.eth
-//   {
-//     transaction: tx({
-//       to: '0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85',
-//       gasLimit: 74294,
-//       data: '0x42842e0e0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a4df59cafb7b8e6afeef4fd35d9c3872705ea338188ed47e125d4fd646c6a72417'
-//     }),
-//     signer: compromisedWallet
-//   },
-
-
-//   // transfer subwayjesuspamphlets.eth
-//   {
-//     transaction: tx({
-//       to: '0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85',
-//       gasLimit: 74294,
-//       data: '0x42842e0e0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a4b84692235124fb32826d39831fee44e1de7ef8d6721c687d85e38e5602dceed9'
-//     }),
-//     signer: compromisedWallet
-//   },
-
-//   // miner bribe
-//   {
-//     transaction: tx({
-//       to: '0x8512a66D249E3B51000b772047C8545Ad010f27c',
-//       value: ETHER / 10000n,
-//     }),
-//     signer: fundingWallet
-//   },
-// ]
-
-
-
-// const bundle2 = [
-//   // send the compromised wallet some eth
-//   {
-//     transaction: tx({
-//       to: compromisedWallet.address,
-//       value: GWEI * BigInt(40663 + 40903 + 43597 + 186169 + 165139 + 144208 + 146265) * BigInt(BASE_FEE)
-//     }),
-//     signer: fundingWallet
-//   },
-
-//   // set fastcash central banker
-//   {
-//     transaction: tx({
-//       to: '0xca5228d1fe52d22db85e02ca305cddd9e573d752',
-//       data: '0x2adc7da300000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a4',
-//       gasLimit: 40663,
-//     }),
-//     signer: compromisedWallet
-//   },
-
-//   // transfer discount fastcash ownership
-
-//   {
-//     transaction: tx({
-//       to: '0x31004aDCEc5371F102e7fbA3c2485548324787Fe',
-//       data: '0xf2fde38b00000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a4',
-//       gasLimit: 40903
-//     }),
-//     signer: compromisedWallet
-//   },
-
-//   // transfer IOU ownership
-
-//   {
-//     transaction: tx({
-//       to: '0x13178AB07A88f065EFe6D06089a6e6AB55AE8a15',
-//       data: '0xf2fde38b00000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a4',
-//       gasLimit: 43597
-//     }),
-//     signer: compromisedWallet
-//   },
-
-
-//   // transfer deafbeef First First
-//   {
-//     transaction: tx({
-//       to: '0xc9Cb0FEe73f060Db66D2693D92d75c825B1afdbF',
-//       data: '0x42842e0e0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a40000000000000000000000000000000000000000000000000000000000000eb0',
-//       gasLimit: 186169,
-
-//     }),
-//     signer: compromisedWallet
-//   },
-
-
-//   // transfer steviep cryptovoxels name
-//   {
-//     transaction: tx({
-//       to: '0x4243a8413A77Eb559c6f8eAFfA63F46019056d08',
-//       data: '0x42842e0e0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a400000000000000000000000000000000000000000000000000000000000020a8',
-//       gasLimit: 165139
-//     }),
-//     signer: compromisedWallet
-//   },
-
-
-//   // transfer Jay Pegs automart
-//   {
-//     transaction: tx({
-//       to: '0xF210D5d9DCF958803C286A6f8E278e4aC78e136E',
-//       data: '0x42842e0e0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a400000000000000000000000000000000000000000000000000000000000011a5',
-//       gasLimit: 144208
-//     }),
-//     signer: compromisedWallet
-//   },
-
-//   // transfer Enchiridion prototype
-//   {
-//     transaction: tx({
-//       to: '0x2a680Bb87962a4bF00A9638e0f43AE0bb7164528',
-//       data: '0x42842e0e0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a40000000000000000000000000000000000000000000000000000000000000013',
-//       gasLimit: 146265
-//     }),
-//     signer: compromisedWallet
-//   },
-
-
-//   // bribe miner
-//   {
-//     transaction: tx({
-//       to: '0x8512a66D249E3B51000b772047C8545Ad010f27c',
-//       value: ETHER / 10000n,
-//     }),
-//     signer: fundingWallet
-//   },
-
-// ]
-
-
-
-// const bundle3 = [
-//   // send the compromised wallet some eth
-//   {
-//     transaction: tx({
-//       to: compromisedWallet.address,
-//       value: GWEI * BigInt(89190+85345+85327) * BigInt(BASE_FEE)
-//     }),
-//     signer: fundingWallet
-//   },
-
-//   // Buddha Matt
-//   {
-//     transaction: tx({
-//       gasLimit: 89190,
-//       data: '0xf242432a0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a40000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006400000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000',
-//       to: '0x28959Cf125ccB051E70711D0924a62FB28EAF186'
-//     }),
-//     signer: compromisedWallet
-//   },
-
-
-//   // chicken
-//   {
-//     transaction: tx({
-//       gasLimit: 85345,
-//       data: '0xf242432a0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a40000000000000000000000000000000000000000000000000000000000016da2000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000',
-//       to: '0xd07dc4262BCDbf85190C01c996b4C06a461d2430'
-//     }),
-//     signer: compromisedWallet
-//   },
-
-
-//   // tomorrow people
-//   {
-//     transaction: tx({
-//       gasLimit: 85327,
-//       data: '0xf242432a0000000000000000000000007c23c1b7e544e3e805ba675c811e287fc9d7194900000000000000000000000047144372eb383466d18fc91db9cd0396aa6c87a40000000000000000000000000000000000000000000000000000000000002730000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000',
-//       to: '0x8f2256063036495F5a362a57757acFcBe72E44B9'
-//     }),
-//     signer: compromisedWallet
-//   },
-
-//   // bribe miner
-//   {
-//     transaction: tx({
-//       to: '0x8512a66D249E3B51000b772047C8545Ad010f27c',
-//       value: ETHER / 10000n,
-//     }),
-//     signer: fundingWallet
-//   },
-
-// ]
-
-
-
-
-let i = 0
+let attempt: number = 0;
 async function main() {
-  console.log('Starting flashbot...')
+  console.log('Starting flashbot...');
 
   // Connect to the flashbots relayer -- this will communicate your bundle of transactions to
   // miners directly, and will bypass the mempool.
-  let flashbotsProvider
+  let flashbotsProvider;
   try {
-    console.log('Retreiving Flashbots Provider...')
-    flashbotsProvider = await FlashbotsBundleProvider.create(provider, Wallet.createRandom(), FLASHBOTS_ENDPOINT)
+    console.log('Retreiving Flashbots Provider...');
+    flashbotsProvider = await FlashbotsBundleProvider.create(provider, Wallet.createRandom(), FLASHBOTS_ENDPOINT);
   } catch (err) {
-    console.error(err)
+    console.error(err);
   }
-
 
   // Every time a new block has been detected, attempt to relay the bundle to miners for the next block
   // Since these transactions aren't in the mempool you need to submit this for every block until it
   // is filled. You don't have to worry about repeat transactions because nonce isn't changing. So you can
-  // leave this running until it fills. I haven't found a good way to detect whether it's filled.
-  provider.on('block', async blockNumber => {
+  // leave this running until it fills.
+  provider.on('block', async (blockNumber) => {
+    const targetBlock = blockNumber + BLOCKS_IN_THE_FUTURE;
+    console.log(`Attempt: ${attempt} - Preparing bundle for block: ${targetBlock}`);
     try {
-      const nextBlock = blockNumber + 1
-      console.log(`Preparing bundle for block: ${nextBlock}`)
+      const block = await provider.getBlock(blockNumber);
+      const maxBaseFeeInFutureBlock = FlashbotsBundleProvider.getMaxBaseFeeInFutureBlock(block.baseFeePerGas, BLOCKS_IN_THE_FUTURE);
+      console.log(`Max base fee in block ${targetBlock} is ${maxBaseFeeInFutureBlock} WEI`);
+      // Prepare transactions
+      const signedBundle = await flashbotsProvider.signBundle(getBundle(maxBaseFeeInFutureBlock));
 
-      const signedBundle = await flashbotsProvider.signBundle(testBundle)
-      const txBundle = await flashbotsProvider.sendRawBundle(signedBundle, nextBlock)
-
-
-      if ('error' in txBundle) {
-        console.log('bundle error:')
-        console.warn(txBundle.error.message)
-        return
+      // Simulate the bundle first - it will make dry run and output any errors
+      console.log('Running simulation');
+      const simulation = await flashbotsProvider.simulate(signedBundle, targetBlock);
+      if ('error' in simulation) {
+        console.warn(`Simulation Error: ${simulation.error.message}`);
+        process.exit(1);
+      } else {
+        console.log(`Simulation Success: ${JSON.stringify(simulation, null, 2)}`);
+        console.log(simulation);
       }
 
-      console.log('Submitting bundle')
-      const response = await txBundle.simulate()
-      if ('error' in response) {
-        console.log('Simulate error')
-        console.error(response.error)
-        process.exit(1)
+      if (SEND_BUNDLE) {
+        // Run bundle
+        console.log('Run bundle');
+        const txBundle = await flashbotsProvider.sendRawBundle(signedBundle, targetBlock);
+        if ('error' in txBundle) {
+          console.error('Fatal error in bundle:', txBundle.error);
+          process.exit(1);
+        }
+
+        // Wait for response
+        const waitResponse = await txBundle.wait();
+        console.log(`Wait Response: ${FlashbotsBundleResolution[waitResponse]}`);
+        if (waitResponse === FlashbotsBundleResolution.BundleIncluded) {
+          console.log(`Bundle included in block ${targetBlock}`, waitResponse);
+          process.exit(0);
+        } else if (waitResponse === FlashbotsBundleResolution.AccountNonceTooHigh) {
+          console.log(`Nonce too high (block: ${targetBlock})`, waitResponse);
+          process.exit(0);
+        } else if (waitResponse === FlashbotsBundleResolution.BlockPassedWithoutInclusion) {
+          console.log(`Not included in ${blockNumber}`, waitResponse);
+        } else {
+          console.log('Unexpected response obtained', waitResponse);
+        }
       }
-
-      console.log('response:', response)
-
-      console.log(`Try: ${i} -- block: ${nextBlock}`)
-      i++
-
+      attempt++;
     } catch (err) {
-      console.log('Request error')
-      console.error(err)
-      process.exit(1)
+      console.error('Fatal request error', err);
+      process.exit(1);
     }
-  })
+  });
 }
 
-// Bada bing, bada boom, beep boop. Run your flash bot
-main()
-
+main();
