@@ -9,7 +9,7 @@
 ## Setup
 - `npm install`
 - Construct a list of transactions. You can get the gasLimit and tx data by doing a dry run with metamask and/or etherscan
-- Test out on goerli
+- Test out on goerli (youll have to request goerli ETH and testing NFT using faucet first. You can use paradigm multifaucet https://faucet.paradigm.xyz/)
 - Run on mainnet
 
 ## Usage
