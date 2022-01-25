@@ -89,6 +89,7 @@ Max fee per gas:\t${maxFeePerGas} WEI, ${convertWeiToGwei(maxFeePerGas)} GWEI
 Fund amount:\t\t${fundAmount} WEI, ${convertWeiToGwei(fundAmount)} GWEI, ${convertWeiToEth(fundAmount)} ETH`);
 
   const bundle = [
+    // Example transaction that i have used to rescue NFT on goerli network
     // Send funds for gas to compromised wallet from funding wallet
     // Take care when computing how much to send - eth scavenger will eat any leftovers
     {
